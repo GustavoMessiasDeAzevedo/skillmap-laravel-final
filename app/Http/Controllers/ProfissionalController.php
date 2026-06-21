@@ -2,107 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Habilidade;
-use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProfissionalController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // 1. Mostra a página de onboarding (as habilidades) logo após o cadastro
+    public function onboarding()
     {
-        $profissionais = User::with('habilidades')->get();
-
-        return view('profissionais.index', compact('profissionais'));
+        return view('onboarding');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $habilidades = Habilidade::all();
-        return view('profissionais.create', compact('habilidades'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    // 2. Recebe a string de habilidades, trata e salva no banco
+    public function salvarHabilidades(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'localizacao' => 'required|string|max:255',
-            'password' => 'required|string|min:8',
-            'habilidades' => 'nullable|string'
+            'localizacao' => 'required|string|max:100',
+            'skills' => 'required|string',
+        ], [
+            'localizacao.required' => 'O campo localização é obrigatório.',
+            'skills.required' => 'Por favor, digite pelo menos uma habilidade.',
         ]);
 
-        $profissional = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'localizacao' => $request->localizacao,
-            'password' => bcrypt($request->password)
-        ]);
+        $usuario = Auth::user();
+        // Aqui vai entrar a lógica de pegar a string, quebrar por vírgula e salvar.
+        // Vamos fazer isso no próximo passo para não fritar mais!
 
-        if ($request->filled('habilidades')) {
-            $habilidadesIds = [];
-
-            $tags = explode(',', $request->habilidades);
-            foreach ($tags as $tag) {
-                $nomeHabilidade = trim($tag);
-                if (!empty($nomeHabilidade)) {
-                    $habilidade = Habilidade::firstOrCreate(
-                        ['nome' => $nomeHabilidade]
-                    );
-                    $habilidadesIds[] = $habilidade->id;
-                }
-            };
-
-            $profissional->habilidades()->sync($habilidadesIds);
-        }
-
-        return redirect()->route('profissionais.index')->with('sucesso', 'Profissional cadastrado com sucesso');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $profissional = User::with('habilidades')->findOrFail($id);
-
-        return view('profissionais.show', compact('profissional'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $profissional = User::findOrFail($id);
-
-        return view('profissionais.edit', compact('profissional'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $profissional = User::findOrFail($id);
-        $profissional->delete();
-
-        return redirect()->route('profissionais.index');
+        return redirect()->route('dashboard')->with('sucesso', 'Perfil configurado!');
     }
 }

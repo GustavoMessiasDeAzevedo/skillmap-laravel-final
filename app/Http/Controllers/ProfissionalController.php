@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,5 +35,37 @@ class ProfissionalController extends Controller
         $usuario->save();
 
         return redirect()->route('dashboard')->with('sucesso', 'Perfil configurado!');
+    }
+
+
+    public function index(Request $request)
+    {
+        $cidadesDisponiveis = User::whereNotNull('localizacao')
+            ->where('localizacao', '!=', '')
+            ->select('localizacao')
+            ->distinct()
+            ->pluck('localizacao');
+
+        $query = User::where('id', '!=', Auth::id())
+            ->whereNotNull('localizacao')
+            ->where('localizacao', '!=', '')
+            ->whereNotNull('habilidades')
+            ->where('habilidades', '!=', '');
+
+        if ($request->filled('cidade')) {
+            $query->where('localizacao', $request->cidade);
+        }
+
+        if ($request->filled('busca')) {
+            $termo = $request->busca;
+            $query->where(function ($q) use ($termo) {
+                $q->where('habilidades', 'like', "%{$termo}%")
+                    ->orWhere('name', 'like', "%{$termo}%");
+            });
+        }
+
+        $profissionais = $query->get();
+
+        return view('explorar', compact('profissionais', 'cidadesDisponiveis'));
     }
 }

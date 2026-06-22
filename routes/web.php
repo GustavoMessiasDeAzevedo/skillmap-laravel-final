@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfissionalController;
 use App\Models\User;
@@ -11,15 +12,13 @@ Route::get('/', function () {
 })->name('home');
 
 // 2. Modo Visitante (Público - Sem middleware de auth para qualquer um ver o mapa)
-Route::get('/explorar', function () {
-    $profissionais = User::query()->whereNotNull('localizacao')->get();
-    return view('explorar', ['profissionais'=>$profissionais]);
-})->name('profissionais.index');
+Route::get('/explorar', [ProfissionalController::class, 'index'])->name('profissionais.index');
+
+Route::patch('/dashboard', [ProfissionalController::class, 'salvarOnboarding'])->name('dashboard.atualizar');
 
 
-// ==========================================
-// 🔒 ROTAS PROTEGIDAS (Apenas usuários logados)
-// ==========================================
+//  ROTAS PROTEGIDAS (Apenas usuários logados)
+
 Route::middleware('auth')->group(function () {
 
     // Dashboard Interna
@@ -35,6 +34,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/chat/{id?}', [ChatController::class, 'index'])->name('chat');
+    Route::post('/chat/{id}', [ChatController::class, 'enviar'])->name('chat.enviar');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

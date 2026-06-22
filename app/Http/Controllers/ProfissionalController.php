@@ -14,19 +14,24 @@ class ProfissionalController extends Controller
     }
 
     // 2. Recebe a string de habilidades, trata e salva no banco
-    public function salvarHabilidades(Request $request)
+    public function salvarOnboarding(Request $request)
     {
         $request->validate([
             'localizacao' => 'required|string|max:100',
-            'skills' => 'required|string',
+            'habilidades' => 'required|string',
         ], [
             'localizacao.required' => 'O campo localização é obrigatório.',
-            'skills.required' => 'Por favor, digite pelo menos uma habilidade.',
+            'habilidades.required' => 'Por favor, digite pelo menos uma habilidade.',
         ]);
 
         $usuario = Auth::user();
-        // Aqui vai entrar a lógica de pegar a string, quebrar por vírgula e salvar.
-        // Vamos fazer isso no próximo passo para não fritar mais!
+
+
+        $habilidadesTratadas = array_map('trim', explode(',', $request->habilidades));
+
+        $usuario->habilidades = implode(',', $habilidadesTratadas);
+        $usuario->localizacao = $request->localizacao;
+        $usuario->save();
 
         return redirect()->route('dashboard')->with('sucesso', 'Perfil configurado!');
     }

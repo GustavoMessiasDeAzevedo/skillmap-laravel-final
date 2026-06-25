@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MensagemEnviada;
 use App\Models\User;
 use App\Models\Mensagem;
 use Illuminate\Http\Request;
@@ -57,11 +58,14 @@ class ChatController extends Controller
             'conteudo' => 'required|string',
         ]);
 
-        Mensagem::query()->create([
+        $mensagem = Mensagem::query()->create([
             'remetente_id' => Auth::id(),
             'destinatario_id' => $id,
             'conteudo' => $request->conteudo,
+            'lida' => false,
         ]);
+
+        event(new MensagemEnviada($mensagem));
 
         return redirect()->route('chat', $id);
     }

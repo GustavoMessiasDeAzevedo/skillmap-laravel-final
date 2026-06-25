@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Habilidade;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,12 +28,20 @@ class ProfissionalController extends Controller
 
         $usuario = Auth::user();
 
-
-        $habilidadesTratadas = array_map('trim', explode(',', $request->habilidades));
-
-        $usuario->habilidades = implode(',', $habilidadesTratadas);
         $usuario->localizacao = $request->localizacao;
         $usuario->save();
+
+        $nomesHabilidades = array_map('trim', explode(',', $request->habilidades));
+        $habilidadesIds = [];
+
+        foreach ($nomesHabilidades as $nome) {
+            if (!empty($nome)) {
+                $habilidade = Habilidade::firstOrCreate(['nome' => $nome]);
+                $habilidadesIds[] = $habilidade->id;
+            }
+        }
+
+        $usuario->habilidades()->sync($habilidadesIds);
 
         return redirect()->route('dashboard')->with('sucesso', 'Perfil configurado!');
     }
@@ -40,31 +49,52 @@ class ProfissionalController extends Controller
 
     public function index(Request $request)
     {
-        $cidadesDisponiveis = User::whereNotNull('localizacao')
+
+        $localizacoesRaw = User::whereNotNull('localizacao')
             ->where('localizacao', '!=', '')
-            ->select('localizacao')
-            ->distinct()
             ->pluck('localizacao');
+
+        $cidadesNormalizadas = [];
+        $cidadesDisponiveis = [];
+
+        foreach ($localizacoesRaw as $localizacao) {
+            $cidadeOriginal = ucwords(preg_replace('/\s*-\s*/', '-', strtolower(trim($localizacao))));
+
+            $cidadeChave = strtolower($cidadeOriginal);
+            $cidadeChave = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cidadeChave);
+            $cidadeChave = preg_replace('/[^a-z0-9\-]/', '', $cidadeChave);
+
+            if (!in_array($cidadeChave, $cidadesNormalizadas)) {
+                $cidadesNormalizadas[] = $cidadeChave;
+                $cidadesDisponiveis[] = $cidadeOriginal;
+            }
+        }
+
+        $cidadesDisponiveis = collect($cidadesDisponiveis)->values();
 
         $query = User::where('id', '!=', Auth::id())
             ->whereNotNull('localizacao')
-            ->where('localizacao', '!=', '')
-            ->whereNotNull('habilidades')
-            ->where('habilidades', '!=', '');
+            ->where('localizacao', '!=', '');
 
         if ($request->filled('cidade')) {
-            $query->where('localizacao', $request->cidade);
+            $cidadeFiltro = strtolower(trim($request->cidade));
+            $cidadeFiltro = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cidadeFiltro);
+            $cidadeFiltro = preg_replace('/[^a-z0-9]/', '', $cidadeFiltro);
+
+            $query->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(TRIM(localizacao)), 'á', 'a'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), ' ', '') LIKE ?", ["%{$cidadeFiltro}%"]);
         }
 
         if ($request->filled('busca')) {
             $termo = $request->busca;
             $query->where(function ($q) use ($termo) {
-                $q->where('habilidades', 'like', "%{$termo}%")
-                    ->orWhere('name', 'like', "%{$termo}%");
+                $q->where('name', 'like', "%{$termo}%")
+                    ->orWhereHas('habilidades', function ($subQuery) use ($termo) {
+                        $subQuery->where('nome', 'like', "%{$termo}%");
+                    });
             });
         }
 
-        $profissionais = $query->get();
+        $profissionais = $query->with('habilidades')->get();
 
         return view('explorar', compact('profissionais', 'cidadesDisponiveis'));
     }

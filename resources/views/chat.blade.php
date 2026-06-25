@@ -105,11 +105,44 @@
 
     </div>
 
-    <script>
-        const chatBox = document.getElementById('chat-messages');
-        if (chatBox) {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatBox = document.getElementById('chat-messages');
+            if (chatBox) {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            const userId = "{{ auth()->id() }}";
+            const chatAtivo = @json($chatAtivo);
+
+            if (userId && chatAtivo && typeof window.Echo !== 'undefined') {
+                console.log('Conectado ao canal de escuta: notificacoes.' + userId);
+
+                window.Echo.channel(`notificacoes.${userId}`)
+                    // Escuta o apelido fixo com o ponto na frente
+                    .listen('.mensagem.enviada', (e) => {
+                        console.log('SINAL CHEGOU DO REVERB!', e);
+
+                        if (chatBox && (e.sender_id == chatAtivo.id || e.receiver_id == chatAtivo.id)) {
+                            const novaMensagemHtml = `
+                            <div class="flex justify-start">
+                                <div class="max-w-[70%] bg-gray-900 border border-gray-800 text-gray-100 px-4 py-2.5 rounded-2xl rounded-tl-none shadow-md text-sm">
+                                    <p class="leading-relaxed break-words">${e.content}</p>
+                                    <span class="text-[10px] text-gray-500 block text-left mt-1 font-mono">
+                                        ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                            chatBox.insertAdjacentHTML('beforeend', novaMensagemHtml);
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        } else {
+                            console.warn('Mensagem ignorada pois os IDs não batem com o chat ativo:', chatAtivo
+                                .id);
+                        }
+                    });
+            }
+        });
     </script>
 
 </x-dashboard-layout>

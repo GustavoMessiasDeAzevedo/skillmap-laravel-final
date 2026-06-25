@@ -41,7 +41,7 @@
                         Habilidades (Separadas por vírgula)
                     </label>
                     <input type="text" id="habilidades" name="habilidades"
-                        value="{{ old('habilidades', Auth::user()->habilidades) }}"
+                        value="{{ auth()->user()->habilidades->pluck('nome')->implode(', ') }}"
                         placeholder="Ex: PHP, Laravel, Tailwind, MySQL"
                         class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
                     <p class="text-[11px] text-gray-500 mt-2 font-mono">As tags serão geradas automaticamente separando
@@ -79,10 +79,10 @@
 
                     <div class="flex flex-wrap gap-1.5">
                         @if (Auth::user()->habilidades)
-                            @foreach (explode(',', Auth::user()->habilidades) as $tag)
+                            @foreach (auth()->user()->habilidades as $tag)
                                 <span
-                                    class="bg-gray-950 border border-gray-800 text-gray-200 text-xs px-2.5 py-1 rounded-md font-mono font-bold tracking-wide">
-                                    {{ trim($tag) }}
+                                    class="bg-gray-950 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded-lg font-mono font-medium">
+                                    {{ $tag->nome }}
                                 </span>
                             @endforeach
                         @else

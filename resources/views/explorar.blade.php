@@ -66,14 +66,13 @@
                     <div class="border-t border-gray-800/60 pt-4 mt-5">
                         <span
                             class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Habilidades</span>
+
                         <div class="flex flex-wrap gap-1">
-                            @foreach (explode(',', $profissional->habilidades) as $tag)
-                                @if (!empty(trim($tag)))
-                                    <span
-                                        class="bg-gray-950 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded-lg font-mono font-medium">
-                                        {{ trim($tag) }}
-                                    </span>
-                                @endif
+                            @foreach ($profissional->habilidades as $tag)
+                                <span
+                                    class="bg-gray-950 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded-lg font-mono font-medium">
+                                    {{ $tag->nome }}
+                                </span>
                             @endforeach
                         </div>
                     </div>
@@ -88,9 +87,8 @@
 
             </div>
         @empty
-            <div class="col-span-full p-12 text-center border border-dashed border-gray-800 rounded-2xl bg-gray-900/10">
-                <p class="text-gray-400 text-sm font-medium">Nenhum profissional encontrado para os filtros
-                    selecionados.</p>
+            <div class="col-span-full text-center py-12">
+                <p class="text-gray-500 italic">Nenhum profissional encontrado.</p>
             </div>
         @endforelse
 

@@ -2,21 +2,20 @@
 
 namespace App\Events;
 
-use App\Models\Mensagem; // Ou o nome do seu model de mensagens (ex: Mensagem)
+use App\Models\Mensagem;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MensagemEnviada implements ShouldBroadcast
+class MensagemEnviada implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $mensagem;
 
-    public function __construct($mensagem)
+    public function __construct(Mensagem $mensagem)
     {
         $this->mensagem = $mensagem;
     }
@@ -24,7 +23,7 @@ class MensagemEnviada implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new \Illuminate\Broadcasting\Channel('notificacoes.' . $this->mensagem->destinatario_id),
+            new Channel('notificacoes.'.$this->mensagem->destinatario_id),
         ];
     }
 
@@ -32,9 +31,10 @@ class MensagemEnviada implements ShouldBroadcast
     {
         return [
             'id' => $this->mensagem->id,
-            'sender_id' => $this->mensagem->remetente_id,
-            'receiver_id' => $this->mensagem->destinatario_id,
+            'remetente_id' => $this->mensagem->remetente_id,
+            'destinatario_id' => $this->mensagem->destinatario_id,
             'content' => $this->mensagem->conteudo,
+            'created_at' => $this->mensagem->created_at->toIso8601String(),
         ];
     }
 

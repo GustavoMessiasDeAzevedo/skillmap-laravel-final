@@ -3,15 +3,32 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Habilidade;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $usuarios = User::all();
+
+        $query = User::with('habilidades');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('habilidades', function ($h) use ($search) {
+                        $h->where('nome', 'like', "%{$search}%");
+                    });
+            });
+        }
+        if ($request->filled('localizacao')) {
+            $query->where('localizacao', 'like', "%{$request->input('localizacao')}%");
+        }
+
+        $usuarios = $query->latest()->get();
 
         return response()->json($usuarios, 200);
     }
@@ -72,7 +89,7 @@ class UserController extends Controller
         $request->validate([
             'localizacao' => 'required|string|max:255',
             'habilidades' => 'nullable|array',
-            'habilidades.*' => 'exists:habilidades,id',
+            // 'habilidades.*' => 'exists:habilidades,id',
         ]);
 
         $user = $request->user();
@@ -82,7 +99,16 @@ class UserController extends Controller
         ]);
 
         if ($request->has('habilidades')) {
-            $user->habilidades()->sync($request->habilidades);
+            $skillsIds = [];
+            foreach ($request->habilidades as $skill) {
+                if (is_numeric($skill)) {
+                    $skillsIds[] = (int) $skill;
+                } elseif (is_string($skill) && ! empty(trim($skill))) {
+                    $habilidade = Habilidade::firstOrCreate(['nome' => trim($skill)]);
+                    $skillsIds[] = $habilidade->id;
+                }
+            }
+            $user->habilidades()->sync($skillsIds);
         }
 
         return response()->json([

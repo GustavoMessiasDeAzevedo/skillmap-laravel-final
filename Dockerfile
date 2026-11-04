@@ -21,8 +21,8 @@ COPY . /var/www/html
 
 WORKDIR /var/www/html
 
-# Instala dependências sem executar scripts automáticos
-RUN composer install --no-dev --no-scripts --optimize-autoloader
+# Instala TODAS as dependências (sem --no-dev) para garantir paridade com o ambiente local
+RUN composer install --no-scripts --optimize-autoloader
 
 # Garante a existência do arquivo database.sqlite e ajusta permissões
 RUN mkdir -p database && touch database/database.sqlite
@@ -31,5 +31,5 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/ht
 
 EXPOSE 80
 
-# Define BROADCAST_DRIVER=log explicitamente ao rodar as migrações no arranque e inicia o Apache
-CMD BROADCAST_DRIVER=log REVERB_APP_KEY=dummy PUSHER_APP_KEY=dummy php artisan migrate --force && apache2-foreground
+# Limpa configurações antigas, executa a migração do SQLite e inicia o Apache
+CMD BROADCAST_DRIVER=log REVERB_APP_KEY=dummy PUSHER_APP_KEY=dummy php artisan config:clear && php artisan migrate --force && apache2-foreground

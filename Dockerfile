@@ -21,15 +21,15 @@ COPY . /var/www/html
 
 WORKDIR /var/www/html
 
-# Instala dependências sem executar scripts automáticos
-RUN composer install --no-dev --no-scripts --optimize-autoloader
+# Instala todas as dependências gerando o autoloader otimizado sem scripts automáticos
+RUN composer install --no-scripts --optimize-autoloader
 
-# Garante a existência do arquivo database.sqlite e dá permissão total para a pasta do banco
+# Garante a existência do arquivo database.sqlite e ajusta permissões
 RUN mkdir -p database && touch database/database.sqlite
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 EXPOSE 80
 
-# Roda as migrações automaticamente ao iniciar o container e sobe o Apache
+# Executa migrações no arranque e inicia o Apache
 CMD php artisan migrate --force && apache2-foreground

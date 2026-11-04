@@ -30,3 +30,6 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 EXPOSE 80
+
+# Roda as migrações automaticamente ao iniciar o container e sobe o Apache
+CMD php artisan migrate --force && apache2-foreground

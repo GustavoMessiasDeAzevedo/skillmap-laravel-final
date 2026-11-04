@@ -21,11 +21,12 @@ COPY . /var/www/html
 
 WORKDIR /var/www/html
 
-# Instala as dependências do Laravel via Composer
+# Instala dependências sem executar scripts automáticos
 RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Cria o arquivo do banco de dados SQLite caso não exista e ajusta permissões
-RUN touch database/database.sqlite
+# Garante a existência do arquivo database.sqlite e dá permissão total para a pasta do banco
+RUN mkdir -p database && touch database/database.sqlite
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 EXPOSE 80

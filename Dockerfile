@@ -16,12 +16,21 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 # Ativa mod_rewrite do Apache
 RUN a2enmod rewrite
 
+# Define variáveis globais para evitar erros de inicialização do Reverb/Pusher
+ENV BROADCAST_DRIVER=log \
+    REVERB_APP_ID=dummy \
+    REVERB_APP_KEY=dummy \
+    REVERB_APP_SECRET=dummy \
+    PUSHER_APP_ID=dummy \
+    PUSHER_APP_KEY=dummy \
+    PUSHER_APP_SECRET=dummy
+
 # Copia os ficheiros do projeto
 COPY . /var/www/html
 
 WORKDIR /var/www/html
 
-# Instala dependências mantendo os pacotes instalados
+# Instala todas as dependências
 RUN composer install --no-scripts --optimize-autoloader
 
 # Garante a existência do arquivo database.sqlite e ajusta permissões
@@ -31,5 +40,5 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/ht
 
 EXPOSE 80
 
-# Injeta variáveis dummy de broadcasting para evitar falhas no artisan e roda as migrações
-CMD BROADCAST_DRIVER=log REVERB_APP_KEY=dummy REVERB_APP_SECRET=dummy PUSHER_APP_KEY=dummy PUSHER_APP_SECRET=dummy php artisan config:clear && php artisan migrate --force && apache2-foreground
+# Limpa o cache, roda as migrações e inicia o servidor Apache
+CMD php artisan config:clear && php artisan migrate --force && apache2-foreground

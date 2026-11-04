@@ -22,7 +22,7 @@ COPY . /var/www/html
 WORKDIR /var/www/html
 
 # Instala as dependências do Laravel via Composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --no-scripts --optimize-autoloader
 
 # Cria o arquivo do banco de dados SQLite caso não exista e ajusta permissões
 RUN touch database/database.sqlite

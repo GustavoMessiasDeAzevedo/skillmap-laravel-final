@@ -64,16 +64,18 @@
                     </p>
 
                     <div class="border-t border-gray-800/60 pt-4 mt-5">
-                        <span
-                            class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Habilidades</span>
+                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Habilidades</span>
 
                         <div class="flex flex-wrap gap-1">
-                            @foreach ($profissional->habilidades as $tag)
-                                <span
-                                    class="bg-gray-950 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded-lg font-mono font-medium">
-                                    {{ $tag->nome }}
-                                </span>
-                            @endforeach
+                            @if ($profissional->habilidades && $profissional->habilidades->count() > 0)
+                                @foreach ($profissional->habilidades as $tag)
+                                    <span class="bg-gray-950 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded-lg font-mono font-medium">
+                                        {{ $tag->nome }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="text-xs text-gray-500 italic">Sem habilidades registradas</span>
+                            @endif
                         </div>
                     </div>
                 </div>

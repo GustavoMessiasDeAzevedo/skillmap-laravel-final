@@ -35,7 +35,7 @@ class ProfissionalController extends Controller
         $habilidadesIds = [];
 
         foreach ($nomesHabilidades as $nome) {
-            if (!empty($nome)) {
+            if (! empty($nome)) {
                 $habilidade = Habilidade::firstOrCreate(['nome' => $nome]);
                 $habilidadesIds[] = $habilidade->id;
             }
@@ -45,7 +45,6 @@ class ProfissionalController extends Controller
 
         return redirect()->route('dashboard')->with('sucesso', 'Perfil configurado!');
     }
-
 
     public function index(Request $request)
     {
@@ -64,7 +63,7 @@ class ProfissionalController extends Controller
             $cidadeChave = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cidadeChave);
             $cidadeChave = preg_replace('/[^a-z0-9\-]/', '', $cidadeChave);
 
-            if (!in_array($cidadeChave, $cidadesNormalizadas)) {
+            if (! in_array($cidadeChave, $cidadesNormalizadas)) {
                 $cidadesNormalizadas[] = $cidadeChave;
                 $cidadesDisponiveis[] = $cidadeOriginal;
             }

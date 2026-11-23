@@ -34,6 +34,7 @@ WORKDIR /var/www/html
 # Instala pacotes PHP e compila o frontend
 RUN composer install --no-scripts --optimize-autoloader
 RUN npm install && npm run build
+RUN docker-php-ext-install pdo pdo_sqlite mbstring exif pcntl bcmath gd
 
 EXPOSE 80
 
